@@ -80,26 +80,69 @@ function getContactsPhotos(){
 				$("#photos").append("<p class='date'>Fecha: " + img.datetaken + "</p>");
 			}
 			$(".username").click(function() {
-				/*clickUsername($(this).attr("id"));
-				alert($(this).attr("id"));*/
-				$('#myTimeline').albeTimeline(data, {
-					//Effect of presentation
-					//'fadeInUp', 'bounceIn', etc
-					effect: 'zoomInUp',
-					//Sets the visibility of the annual grouper
-					showGroup: true,
-					//Sets the anchor menu visibility for annual groupings (depends on 'showGroup')
-					showMenu: true,
-					//Specifies the display language of texts (i18n)
-					language: 'es-ES',
-					//Sets the date display format
-					//'dd/MM/yyyy', 'dd de MMMM de yyyy HH:mm:ss', etc
-					formatDate : 'dd MMMM',
-					//Defines ordering of items
-					//true: Descendente
-					//false: Ascendente
-					sortDesc: true
-				});
+
+                let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
+                    '&user_id=' + $(this).attr("id") +
+                    '&min_upload_date=' + lastyear +
+                    '&extras=date_upload&format=json&nojsoncallback=1';
+                $.getJSON(url,
+
+                    function(response) {
+                        var data = [];
+                        for (var img of response.photos.photo) {
+
+                            var date_ = new Date(img.dateupload * 1000);
+                            console.log(date_.getTime());
+                            console.debug(date_);
+                            var getd = date_.getDate();
+                            var getm = date_.getMonth() + 1;
+                            var mon =  (getm)<10?('0'+getm):getm;
+                            var date2 = (getd)<10?('0'+getd):getd;
+                            console.log(date_.getFullYear() + "-" + mon + "-" + date2);
+                            fecha = date_.getFullYear() + "-" + mon + "-" + date2;
+
+                            data.push(
+                                {
+                                    time: fecha,
+                                    body: [{
+                                        tag: 'img',
+                                        attr: {
+                                            src: photoUrl(img),
+                                            width: '100px',
+                                            cssclass: 'img-responsive'
+                                        }
+                                    },
+                                        {
+                                            tag: 'h2',
+                                            content: img.title
+                                        },
+                                        {
+                                            tag: 'p',
+                                            content: 'aqui van los comentarios'
+                                        }]
+                                }
+                            );
+                        }
+                        $('#myTimeline').albeTimeline(data, {
+                            //Effect of presentation
+                            //'fadeInUp', 'bounceIn', etc
+                            effect: 'zoomInUp',
+                            //Sets the visibility of the annual grouper
+                            showGroup: true,
+                            //Sets the anchor menu visibility for annual groupings (depends on 'showGroup')
+                            showMenu: true,
+                            //Specifies the display language of texts (i18n)
+                            language: 'es-ES',
+                            //Sets the date display format
+                            //'dd/MM/yyyy', 'dd de MMMM de yyyy HH:mm:ss', etc
+                            formatDate : 'dd MMMM',
+                            //Defines ordering of items
+                            //true: Descendente
+                            //false: Ascendente
+                            sortDesc: true
+                        });
+                    }
+                );
 			});
 		}
 
@@ -130,5 +173,37 @@ function clickUsername(nid) {
 		}
 	);
 }
+$(document).ready(function () {
+
+    //Overrides the CutureInfo default plugin
+    $.fn.albeTimeline.languages = {
+        "en-US": {
+            days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+            shortMonths: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            msgEmptyContent: "No information to display."
+        },
+        "es-ES": {
+            days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+            months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+            shortMonths: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            msgEmptyContent: "No hay información para mostrar."
+        },
+        "fr-FR": {
+            days: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
+            months: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+            shortMonths: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"],
+            msgEmptyContent: "Aucune information à afficher."
+        }
+    };
+
+    //Internationalization
+    $('#myTimeline').albeTimeline(data, {
+        language: 'es-ES',	//default: pt-BR
+        formatDate: 'DD, dd MMMM aaaaa'
+
+    });
+
+});
 
 start();
