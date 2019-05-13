@@ -137,6 +137,16 @@ function getContactsPhotos(){
 
 								let fecha = date_.getFullYear() + '-' + mon + '-' + day;
 
+								let comment_list = "";
+								$.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
+									'&api_key=' + api_key +
+									'&photo_id=' + img.id +
+									'&format=json&nojsoncallback=1', function (answer) {
+									for (var comm of answer.comments.comment) {
+										comment_list += "<p>" + comm._content + "</p>";
+									}
+								});
+
 								data.push(
 				                            {
 				                                time: fecha,
@@ -144,7 +154,7 @@ function getContactsPhotos(){
 				                                    tag: 'img',
 				                                    attr: {
 				                                        src: miniphotoUrl(img),
-				                                        width: '200px',
+				                                        width: '300px',
 				                                        cssclass: 'img-responsive'
 				                                    }
 				                                },
@@ -154,7 +164,7 @@ function getContactsPhotos(){
 				                                    },
 				                                    {
 				                                        tag: 'p',
-				                                        content: 'aqui van los comentarios'
+				                                        content: comment_list
 				                                    }]
 				                            }
 								);
@@ -168,7 +178,7 @@ function getContactsPhotos(){
 		                        //Sets the visibility of the annual grouper
 		                        showGroup: true,
 		                        //Sets the anchor menu visibility for annual groupings (depends on 'showGroup')
-		                        showMenu: true,
+		                        showMenu: false,
 		                        //Specifies the display language of texts (i18n)
 		                        language: 'es-ES',
 		                        //Sets the date display format
@@ -179,7 +189,7 @@ function getContactsPhotos(){
 		                        //false: Ascendente
 		                        sortDesc: true
 							});
-
+							$('#myTimeline').show();
 							$("#ognavbar").hide();
 
 							let newnavbar = "<ul class='navbar-nav' id='newnavbar'>" +
@@ -204,6 +214,7 @@ function getContactsPhotos(){
 
 							$("#mainp").click( function(){
 								$("#newnavbar").hide();
+								$('#myTimeline').hide();
 								$("#ognavbar").show();
 								$("#mcont").show();
 							});
