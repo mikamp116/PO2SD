@@ -13,6 +13,7 @@ let contact_photos_url= 'https://api.flickr.com/services/rest/?&method=flickr.ph
 		+ user_id
 		+ '&count=50&extras=date_taken&format=json&nojsoncallback=1';
 
+// Esta funcion elimina espacios y puntos de los nombres de usuario para poder utilizarlos como ids en elementos html
 function sanitizeUname(str){
 	str = str.replace(/\s+/g, '');
 	return str.replace(/\./g, '');
@@ -48,9 +49,11 @@ function getContactPublicList(){
 			for(const c of clist){
 				contactList.set(c.username, c.nsid); // Guardamos los nombres de usuario de los contactos en un array
 				nameMap.set(c.username, " "); // Creamos un mapa para obtener los nombres reales
+
 				$.getJSON(buildMethodURL("flickr.people.getInfo", c.nsid),
+
 					function (data){
-						nameMap.set(c.username, data.person.realname._content);
+						nameMap.set(c.username , data.person.realname._content);
 						$("#" + sanitizeUname(c.username) + "rn").append(nameMap.get(c.username)); // Mostramos el nombre completo
 					}
 				);
@@ -66,14 +69,17 @@ function getContactPublicList(){
 			getContactsPhotos();
 		}
 	);
+
 }
 
 function changeBetweenFriendsAndContactsPhotos(){
 
+	// Obtenemos las fotos de nuestros amigos y familia solo
 	$.getJSON(contact_photos_url + "&just_friends=1",
 
 		function(response){
 
+			// Al hacer click en amigos y familia se esconden todas las fotos y solo se muestran las de amigos y familia
 			$("#amigos").click( function() {
 				for (const [uname, uid] of contactList){
 					$("#" + sanitizeUname(uname) + "_cont").hide();
@@ -84,6 +90,7 @@ function changeBetweenFriendsAndContactsPhotos(){
 				}
 			});
 
+			// Al hacer click en todos se vuelven a mostrar todas las fotos
 			$("#todos").click( function() {
 				for (const [uname, uid] of contactList){
 					$("#" + sanitizeUname(uname) + "_cont").show();
@@ -96,63 +103,59 @@ function changeBetweenFriendsAndContactsPhotos(){
 
 }
 
-function getContactsPhotos(){
+// Mostrar la timeline de un año, 0 para el año pasado, otra cosa para año actual
+function getTimelineOfYear(nyear, nuid){
 
-	$.getJSON(contact_photos_url,
-
-		function(response){
-			for (const img of response.photos.photo){
-
-				// Mostramos cada imagen en miniatura y la hacemos un enlace a la foto en tamaño grande
-				let gphoto ="<div class='gallery'>" +
-								"<a target='_blank' href='" + largephotoUrl(img) + "'>" +
-									"<img src='" + miniphotoUrl(img) + "'/>" +
-								"</a>" +
-								"<div class='desc'>" + "Fecha: " + img.datetaken + "</div>" +
-							"</div>" ;
-
-
-				$("#" + sanitizeUname(img.username) + "_row").append(gphoto);
-			}
-
-			$(".un").click( function() {
-					let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
-				              '&user_id=' + $(this).attr("id") +
-				              '&min_upload_date=' + this_year +
-							  '&extras=date_upload&format=json&nojsoncallback=1';
-					let urlpast = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
-					'&user_id=' + $(this).attr("id") +
+	let url_this =  'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
+					'&user_id=' + nuid +
+					'&min_upload_date=' + this_year +
+					'&extras=date_upload&format=json&nojsoncallback=1';
+	let url_past = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
+					'&user_id=' + nuid +
 					'&min_upload_date=' + last_year +
 					'&max_upload_date=' + this_year +
 					'&extras=date_upload&format=json&nojsoncallback=1';
 
-				$.getJSON(urlpast,
-					function(re){
-						let data = [];
+	// elegir url y elemento de html en funcion de los argumentos recibidos
 
-						for (const img of re.photos.photo) {
-							let date_ = new Date(img.dateupload * 1000);
-							let getd = date_.getDate();
-							let getm = date_.getMonth() + 1;
-							let mon = (getm) < 10 ? ('0' + getm) : getm;
-							let day = (getd) < 10 ? ('0' + getd) : getd;
+	let url_use = nyear == 0 ? url_past : url_this;
 
-							let fecha = date_.getFullYear() + '-' + mon + '-' + day;
+	let tl = nyear == 0 ? "#myTimeline2" : "#myTimeline";
 
-							let comment_list = "";
-							$.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
-								'&api_key=' + api_key +
-								'&photo_id=' + img.id +
-								'&format=json&nojsoncallback=1', function (answer) {
-								for (var comm of answer.comments.comment) {
-									comment_list += "<p>" + comm._content + "</p>";
-								}
-							});
+	// llamada a la api para recoger las fotos
+	$.getJSON(url_use,
 
-							data.push(
-								{
-									time: fecha,
-									body: [{
+			function(re){
+
+				let data = [];
+
+				// Por cada foto guardamos la fecha
+				for (const img of re.photos.photo) {
+					let date_ = new Date(img.dateupload * 1000);
+					let getd = date_.getDate();
+					let getm = date_.getMonth() + 1;
+					let mon = (getm) < 10 ? ('0' + getm) : getm;
+					let day = (getd) < 10 ? ('0' + getd) : getd;
+
+					let fecha = date_.getFullYear() + '-' + mon + '-' + day;
+
+					let comment_list = "";
+
+					// Obtenemos los comentarios de la foto para mostrarlos
+					$.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
+						'&api_key=' + api_key +
+						'&photo_id=' + img.id +
+						'&format=json&nojsoncallback=1', function (answer) {
+						for (var comm of answer.comments.comment) {
+							comment_list += "<p>" + comm._content + "</p>";
+						}
+					});
+
+					// Creamos el objeto para mostrarlo con la template de la timeline
+					data.push(
+						{
+							time: fecha,
+							body: [{
 										tag: 'img',
 										attr: {
 											src: miniphotoUrl(img),
@@ -160,143 +163,120 @@ function getContactsPhotos(){
 											cssclass: 'img-responsive'
 										}
 									},
-										{
-											tag: 'h2',
-											content: img.title
-										},
-										{
-											tag: 'p',
-											content: comment_list
-										}]
-								}
-							);
+									{
+										tag: 'h2',
+										content: img.title
+									},
+									{
+										tag: 'p',
+										content: comment_list
+								  }]
 						}
-
-
-						$('#myTimeline2').albeTimeline(data, {
-							effect: 'zoomInUp',
-							showGroup: true,
-							showMenu: false,
-							language: 'es-ES',
-							sortDesc: true
-						});
-					}
-				);
-					$.getJSON(url, 
-
-						function(re){
-							let data = [];
-
-							for (const img of re.photos.photo) {
-								let date_ = new Date(img.dateupload * 1000);
-								let getd = date_.getDate();
-								let getm = date_.getMonth() + 1;
-								let mon = (getm) < 10 ? ('0' + getm) : getm;
-								let day = (getd) < 10 ? ('0' + getd) : getd;
-
-								let fecha = date_.getFullYear() + '-' + mon + '-' + day;
-
-								let comment_list = "";
-								$.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
-									'&api_key=' + api_key +
-									'&photo_id=' + img.id +
-									'&format=json&nojsoncallback=1', function (answer) {
-									for (var comm of answer.comments.comment) {
-										comment_list += "<p>" + comm._content + "</p>";
-									}
-								});
-
-								data.push(
-				                            {
-				                                time: fecha,
-				                                body: [{
-				                                    tag: 'img',
-				                                    attr: {
-				                                        src: miniphotoUrl(img),
-				                                        width: '300px',
-				                                        cssclass: 'img-responsive'
-				                                    }
-				                                },
-				                                    {
-				                                        tag: 'h2',
-				                                        content: img.title
-				                                    },
-				                                    {
-				                                        tag: 'p',
-				                                        content: comment_list
-				                                    }]
-				                            }
-								);
-							}
-
-
-							$('#myTimeline').albeTimeline(data, {
-		                        effect: 'zoomInUp',
-		                        showGroup: true,
-		                        showMenu: false,
-		                        language: 'es-ES',
-		                        sortDesc: true
-							});
-
-							$("#ognavbar").hide();
-
-							let newnavbar = "<ul class='navbar-nav' id='newnavbar'>" +
-												"<li class='nav-item'>" +
-													"<a class='navbar-link' href='#' id='tyear'>Este año</a>" +
-												"</li>" +
-												"<li class='nav-item'>" +
-													"<a class='navbar-link' href='#' id='lyear'>Año anterior</a>" +
-												"</li>" +
-												"<li class='nav-item'>" +
-													"<a class='navbar-link' href='#' id='mainp'>Volver</a>" +
-												"</li>" +
-											"</ul>";
-							if ( $("#newnavbar").length ) {
-								$("#newnavbar").show();
-							} else{
-								$("#navbar").append(newnavbar);
-							}
-
-							//Estado inicial
-							$('#myTimeline').show();
-							$('#myTimeline2').hide();
-							$("#mcont").hide();
-							$("#tyear").hide();
-							$("#lyear").show();
-
-							$("#lyear").click( function() {
-								$('#myTimeline').hide();
-								$('#myTimeline2').show();
-								$('#lyear').hide();
-								$('#tyear').show();
-							});
-
-							$("#tyear").click( function() {
-								$('#myTimeline2').hide();
-								$('#myTimeline').show();
-								$('#tyear').hide();
-								$('#lyear').show();
-							});
-
-							$("#mainp").click( function(){
-								$("#newnavbar").hide();
-								$('#myTimeline').hide();
-								$('#myTimeline2').hide();
-								$("#ognavbar").show();
-								$("#mcont").show();
-							});
-
-						}
-
 					);
+				}
+
+				// Añadimos la timeline al elemento html correspondiente
+				$(tl).albeTimeline(data, {
+					effect: 'zoomInUp',
+					showGroup: true,
+					showMenu: false,
+					language: 'es-ES',
+					sortDesc: true
+				});
+			}
+	);
+
+}
+
+function getContactsPhotos(){
+
+	$.getJSON(contact_photos_url,
+
+		function(response){
+			for (const img of response.photos.photo){
+
+				// Mostramos cada imagen en miniatura y la hacemos un enlace a la foto en tamano grande
+				let gphoto ="<div class='gallery'>" +
+								"<a target='_blank' href='" + largephotoUrl(img) + "'>" +
+									"<img src='" + miniphotoUrl(img) + "'/>" +
+								"</a>" +
+								"<div class='desc'>" + "Fecha: " + img.datetaken + "</div>" +
+							"</div>" ;
+
+				// Anadimos la foto al elemento html de su propietario
+				$("#" + sanitizeUname(img.username) + "_row").append(gphoto);
+			}
+
+			// Al hacer click en el nombre de usuario
+			$(".un").click( function() {
+					
+					// Creamos los dos timelines
+					getTimelineOfYear(0, $(this).attr("id"));
+					getTimelineOfYear(1, $(this).attr("id"));				
+
+					// Cambiamos el contenido de la navbar
+					$("#ognavbar").hide();
+
+					let newnavbar = "<ul class='navbar-nav' id='newnavbar'>" +
+										"<li class='nav-item'>" +
+											"<a class='navbar-link' href='#' id='tyear'>Este año</a>" +
+										"</li>" +
+										"<li class='nav-item'>" +
+											"<a class='navbar-link' href='#' id='lyear'>Año anterior</a>" +
+										"</li>" +
+										"<li class='nav-item'>" +
+											"<a class='navbar-link' href='#' id='mainp'>Volver</a>" +
+										"</li>" +
+									"</ul>";
+
+					if ( $("#newnavbar").length ) {
+						$("#newnavbar").show();
+					} else{
+						$("#navbar").append(newnavbar);
+					}
+
+					//Estado inicial
+					$('#myTimeline').show();
+					$('#myTimeline2').hide();
+					$("#mcont").hide();
+					$("#tyear").hide();
+					$("#lyear").show();
+
+					// Si elegimos ver el ano pasado
+					$("#lyear").click( function() {
+						$('#myTimeline').hide();
+						$('#myTimeline2').show();
+						$('#lyear').hide();
+						$('#tyear').show();
+					});
+
+					// Si elegimos ver este ano
+					$("#tyear").click( function() {
+						$('#myTimeline2').hide();
+						$('#myTimeline').show();
+						$('#tyear').hide();
+						$('#lyear').show();
+					});
+
+					// Si queremos volver atras
+					$("#mainp").click( function(){
+						$("#newnavbar").hide();
+						$('#myTimeline').hide();
+						$('#myTimeline2').hide();
+						$("#ognavbar").show();
+						$("#mcont").show();
+					});
 			});
 		});
 }
 
+
+// Url para miniaturas
 function miniphotoUrl(photo) {
 	return 'https://farm'+photo.farm+".staticflickr.com/"+photo.server +'/'+photo.id+'_'+photo.secret+'_m.jpeg';
 }
 
+// Url para fotos grandes
 function largephotoUrl(photo) {
 	return 'https://farm'+photo.farm+".staticflickr.com/"+photo.server +'/'+photo.id+'_'+photo.secret+'_b.jpeg';
 }
@@ -334,5 +314,3 @@ function start(){
 }
 
 start();
-
-
