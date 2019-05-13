@@ -11,9 +11,12 @@ let contact_photos_url= 'https://api.flickr.com/services/rest/?&method=flickr.ph
 		+ api_key
 		+ '&user_id='
 		+ user_id
-		+ '&extras=date_taken&format=json&nojsoncallback=1';
+		+ '&count=50&extras=date_taken&format=json&nojsoncallback=1';
 
-
+function sanitizeUname(str){
+	str = str.replace(/\s+/g, '');
+	return str.replace(/\./g, '');
+}
 
 function buildMethodURL(method, user_id){ // Con este metodo podemos crear las url para los metodos api sencillos
 	return url_base +
@@ -50,15 +53,15 @@ function getContactPublicList(){
 
 					function (data){
 						nameMap.set(c.username , data.person.realname._content);
-						$("#" + c.username + "rn").append(nameMap.get(c.username)); // Mostramos el nombre completo
+						$("#" + sanitizeUname(c.username) + "rn").append(nameMap.get(c.username)); // Mostramos el nombre completo
 					}
 				);
 			}
 			for (const [uname, uid] of contactList){ // Por cada usuario preparamos un contenedor para mostrar sus fotos
-				let ccol = 	"<div class='container-fluid' id='" + uname + "_cont'>" +
+				let ccol = 	"<div class='container-fluid' id='" + sanitizeUname(uname) + "_cont'>" +
 						   		"<h2><a href='#' class='un' id='" + uid + "'>" + uname + "</a></h2>" +
-						   		"<span id='" + uname + "rn'></span>" +
-						   		"<div class='row justify-content-center' id='" + uname + "_row'></div>" +
+						   		"<span id='" + sanitizeUname(uname) + "rn'></span>" +
+						   		"<div class='row justify-content-center' id='" + sanitizeUname(uname) + "_row'></div>" +
 						   	"</div>";
 				$("#mcont").append(ccol);
 			}
@@ -68,24 +71,24 @@ function getContactPublicList(){
 }
 
 function changeBetweenFriendsAndContactsPhotos(){
-	
+
 	$.getJSON(contact_photos_url + "&just_friends=1",
 
 		function(response){
 
 			$("#amigos").click( function() {
 				for (const [uname, uid] of contactList){
-					$("#" + uname + "_cont").hide();
+					$("#" + sanitizeUname(uname) + "_cont").hide();
 				}
 
 				for (const img of response.photos.photo){
-					$("#" + img.username + "_cont").show();
+					$("#" + sanitizeUname(img.username) + "_cont").show();
 				}
 			});
 
 			$("#todos").click( function() {
 				for (const [uname, uid] of contactList){
-					$("#" + uname + "_cont").show();
+					$("#" + sanitizeUname(uname) + "_cont").show();
 				}
 			});
 
@@ -111,115 +114,107 @@ function getContactsPhotos(){
 							"</div>" ;
 
 
-				$("#" + img.username + "_row").append(gphoto);
+				$("#" + sanitizeUname(img.username) + "_row").append(gphoto);
 			}
 
 			$(".un").click( function() {
-					makeTimeline();
-			});
-		}
+					let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
+				              '&user_id=' + $(this).attr("id") +
+				              '&min_upload_date=' + last_year +
+							  '&extras=date_upload&format=json&nojsoncallback=1';
 
-	);
+					$.getJSON(url, 
+
+						function(re){
+							let data = [];
+
+							for (const img of re.photos.photo) {
+								let date_ = new Date(img.dateupload * 1000);
+								let getd = date_.getDate();
+								let getm = date_.getMonth() + 1;
+								let mon = (getm) < 10 ? ('0' + getm) : getm;
+								let day = (getd) < 10 ? ('0' + getd) : getd;
+
+								let fecha = date_.getFullYear() + '-' + mon + '-' + day;
+
+								data.push(
+				                            {
+				                                time: fecha,
+				                                body: [{
+				                                    tag: 'img',
+				                                    attr: {
+				                                        src: miniphotoUrl(img),
+				                                        width: '200px',
+				                                        cssclass: 'img-responsive'
+				                                    }
+				                                },
+				                                    {
+				                                        tag: 'h2',
+				                                        content: img.title
+				                                    },
+				                                    {
+				                                        tag: 'p',
+				                                        content: 'aqui van los comentarios'
+				                                    }]
+				                            }
+								);
+							}
+
+
+							$('#myTimeline').albeTimeline(data, {
+		                        //Effect of presentation
+		                        //'fadeInUp', 'bounceIn', etc
+		                        effect: 'zoomInUp',
+		                        //Sets the visibility of the annual grouper
+		                        showGroup: true,
+		                        //Sets the anchor menu visibility for annual groupings (depends on 'showGroup')
+		                        showMenu: true,
+		                        //Specifies the display language of texts (i18n)
+		                        language: 'es-ES',
+		                        //Sets the date display format
+		                        //'dd/MM/yyyy', 'dd de MMMM de yyyy HH:mm:ss', etc
+		                        //formatDate : 'dd MMMM',
+		                        //Defines ordering of items
+		                        //true: Descendente
+		                        //false: Ascendente
+		                        sortDesc: true
+							});
+
+							$("#ognavbar").hide();
+
+							let newnavbar = "<ul class='navbar-nav' id='newnavbar'>" +
+												"<li class='nav-item'>" +
+													"<a class='navbar-link' href='#' id='tyear'>Este año</a>" +
+												"</li>" +
+												"<li class='nav-item'>" +
+													"<a class='navbar-link' href='#' id='lyear'>Año anterior</a>" +
+												"</li>" +
+												"<li class='nav-item'>" +
+													"<a class='navbar-link' href='#' id='mainp'>Volver</a>" +
+												"</li>" +
+											"</ul>";
+
+							if ( $("#newnavbar").length ) {
+								$("#newnavbar").show();
+							} else{
+								$("#navbar").append(newnavbar);
+							}
+
+							$("#mcont").hide();
+
+							$("#mainp").click( function(){
+								$("#newnavbar").hide();
+								$("#ognavbar").show();
+								$("#mcont").show();
+							});
+
+						}
+
+					);
+			});
+		});
 
 }
-
-function makeTimeline() {
-
-	let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
-              '&user_id=' + $(this).attr("id") +
-              '&min_upload_date=' + last_year +
-			  '&extras=date_upload&format=json&nojsoncallback=1';
-
-	$.getJSON(url, 
-
-		function(re){
-			let data = [];
-
-			for (const img of re.photos.photo) {
-				let date_ = new Date(img.dateupload * 1000);
-				let getd = date_.getDate();
-				let getm = date_.getMonth() + 1;
-				let mon = (getm) < 10 ? ('0' + getm) : getm;
-				let day = (getd) < 10 ? ('0' + getd) : getd;
-
-				let fecha = date_.getFullYear() + '-' + mon + '-' + day;
-
-				data.push(
-                            {
-                                time: fecha,
-                                body: [{
-                                    tag: 'img',
-                                    attr: {
-                                        src: miniphotoUrl(img),
-                                        width: '200px',
-                                        cssclass: 'img-responsive'
-                                    }
-                                },
-                                    {
-                                        tag: 'h2',
-                                        content: img.title
-                                    },
-                                    {
-                                        tag: 'p',
-                                        content: 'aqui van los comentarios'
-                                    }]
-                            }
-				);
-			}
-
-
-			$('#myTimeline').albeTimeline(data, {
-                        //Effect of presentation
-                        //'fadeInUp', 'bounceIn', etc
-                        effect: 'zoomInUp',
-                        //Sets the visibility of the annual grouper
-                        showGroup: true,
-                        //Sets the anchor menu visibility for annual groupings (depends on 'showGroup')
-                        showMenu: true,
-                        //Specifies the display language of texts (i18n)
-                        language: 'es-ES',
-                        //Sets the date display format
-                        //'dd/MM/yyyy', 'dd de MMMM de yyyy HH:mm:ss', etc
-                        //formatDate : 'dd MMMM',
-                        //Defines ordering of items
-                        //true: Descendente
-                        //false: Ascendente
-                        sortDesc: true
-			});
-
-			$("#ognavbar").hide();
-
-			let newnavbar = "<ul class='navbar-nav' id='newnavbar'>" +
-								"<li class='nav-item'>" +
-									"<a class='navbar-link' href='#' id='tyear'>Este año</a>" +
-								"</li>" +
-								"<li class='nav-item'>" +
-									"<a class='navbar-link' href='#' id='lyear'>Año anterior</a>" +
-								"</li>" +
-								"<li class='nav-item'>" +
-									"<a class='navbar-link' href='#' id='mainp'>Volver</a>" +
-								"</li>" +
-							"</ul>";
-
-			if ( $("#newnavbar").length ) {
-				$("#newnavbar").show();
-			} else{
-				$("#navbar").append(newnavbar);
-			}
-
-			$("#mcont").hide();
-
-			$("#mainp").click( function(){
-				$("#newnavbar").hide();
-				$("#ognavbar").show();
-				$("#mcont").show();
-			});
-
-		}
-
-	);
-}
-
 
 
 
