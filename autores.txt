@@ -4,7 +4,8 @@ Mikayel Mardanyan Petrosyan 55066243B
 
 Trabajo realizado:
 
-	- Jorge: 
+	- Jorge: recogida de requisitos, testeo de la app, funciones en js -> mostrar el año actual o el año anterior en el timeline,
+	         mostrar fechas al lado de las fotos, modificaciones en la implementacion del albe timeline
 
 	- Mikayel : 
 
