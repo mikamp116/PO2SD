@@ -1,0 +1,13 @@
+Jorge Chavero Morcillo 53905005C
+Víctor Fernández Fernández 47522661S
+Mikayel Mardanyan Petrosyan 55066243B
+
+Trabajo realizado:
+
+	- Jorge: 
+
+	- Mikayel : 
+
+	- Víctor: código html base, funciones en js -> showUsername, primera versión de getContactPublicList, 
+			  changeBetweenFriendsAndContactsPhotos, sanitizeUname, miniphotoUrl, largephotoUrl y adaptar
+			  getContactsPhotos para mostrar las imágenes en gallerys.
