@@ -48,11 +48,9 @@ function getContactPublicList(){
 			for(const c of clist){
 				contactList.set(c.username, c.nsid); // Guardamos los nombres de usuario de los contactos en un array
 				nameMap.set(c.username, " "); // Creamos un mapa para obtener los nombres reales
-
 				$.getJSON(buildMethodURL("flickr.people.getInfo", c.nsid),
-
 					function (data){
-						nameMap.set(c.username , data.person.realname._content);
+						nameMap.set(c.username, data.person.realname._content);
 						$("#" + sanitizeUname(c.username) + "rn").append(nameMap.get(c.username)); // Mostramos el nombre completo
 					}
 				);
@@ -65,9 +63,9 @@ function getContactPublicList(){
 						   	"</div>";
 				$("#mcont").append(ccol);
 			}
+			getContactsPhotos();
 		}
 	);
-
 }
 
 function changeBetweenFriendsAndContactsPhotos(){
@@ -122,7 +120,68 @@ function getContactsPhotos(){
 				              '&user_id=' + $(this).attr("id") +
 				              '&min_upload_date=' + last_year +
 							  '&extras=date_upload&format=json&nojsoncallback=1';
+					let urlpast = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
+					'&user_id=' + $(this).attr("id") +
+					'&min_upload_date=' + last_year +
+					'&max_upload_date=' + this_year +
+					'&extras=date_upload&format=json&nojsoncallback=1';
 
+				$.getJSON(urlpast,
+					function(re){
+						let data = [];
+
+						for (const img of re.photos.photo) {
+							let date_ = new Date(img.dateupload * 1000);
+							let getd = date_.getDate();
+							let getm = date_.getMonth() + 1;
+							let mon = (getm) < 10 ? ('0' + getm) : getm;
+							let day = (getd) < 10 ? ('0' + getd) : getd;
+
+							let fecha = date_.getFullYear() + '-' + mon + '-' + day;
+
+							let comment_list = "";
+							$.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
+								'&api_key=' + api_key +
+								'&photo_id=' + img.id +
+								'&format=json&nojsoncallback=1', function (answer) {
+								for (var comm of answer.comments.comment) {
+									comment_list += "<p>" + comm._content + "</p>";
+								}
+							});
+
+							data.push(
+								{
+									time: fecha,
+									body: [{
+										tag: 'img',
+										attr: {
+											src: miniphotoUrl(img),
+											width: '300px',
+											cssclass: 'img-responsive'
+										}
+									},
+										{
+											tag: 'h2',
+											content: img.title
+										},
+										{
+											tag: 'p',
+											content: comment_list
+										}]
+								}
+							);
+						}
+
+
+						$('#myTimeline2').albeTimeline(data, {
+							effect: 'zoomInUp',
+							showGroup: true,
+							showMenu: false,
+							language: 'es-ES',
+							sortDesc: true
+						});
+					}
+				);
 					$.getJSON(url, 
 
 						function(re){
@@ -172,24 +231,13 @@ function getContactsPhotos(){
 
 
 							$('#myTimeline').albeTimeline(data, {
-		                        //Effect of presentation
-		                        //'fadeInUp', 'bounceIn', etc
 		                        effect: 'zoomInUp',
-		                        //Sets the visibility of the annual grouper
 		                        showGroup: true,
-		                        //Sets the anchor menu visibility for annual groupings (depends on 'showGroup')
 		                        showMenu: false,
-		                        //Specifies the display language of texts (i18n)
 		                        language: 'es-ES',
-		                        //Sets the date display format
-		                        //'dd/MM/yyyy', 'dd de MMMM de yyyy HH:mm:ss', etc
-		                        //formatDate : 'dd MMMM',
-		                        //Defines ordering of items
-		                        //true: Descendente
-		                        //false: Ascendente
 		                        sortDesc: true
 							});
-							$('#myTimeline').show();
+
 							$("#ognavbar").hide();
 
 							let newnavbar = "<ul class='navbar-nav' id='newnavbar'>" +
@@ -203,18 +251,37 @@ function getContactsPhotos(){
 													"<a class='navbar-link' href='#' id='mainp'>Volver</a>" +
 												"</li>" +
 											"</ul>";
-
 							if ( $("#newnavbar").length ) {
 								$("#newnavbar").show();
 							} else{
 								$("#navbar").append(newnavbar);
 							}
 
+							//Estado inicial
+							$('#myTimeline').show();
+							$('#myTimeline2').hide();
 							$("#mcont").hide();
+							$("#tyear").hide();
+							$("#lyear").show();
+
+							$("#lyear").click( function() {
+								$('#myTimeline').hide();
+								$('#myTimeline2').show();
+								$('#lyear').hide();
+								$('#tyear').show();
+							});
+
+							$("#tyear").click( function() {
+								$('#myTimeline2').hide();
+								$('#myTimeline').show();
+								$('#tyear').hide();
+								$('#lyear').show();
+							});
 
 							$("#mainp").click( function(){
 								$("#newnavbar").hide();
 								$('#myTimeline').hide();
+								$('#myTimeline2').hide();
 								$("#ognavbar").show();
 								$("#mcont").show();
 							});
@@ -224,10 +291,7 @@ function getContactsPhotos(){
 					);
 			});
 		});
-
 }
-
-
 
 function miniphotoUrl(photo) {
 	return 'https://farm'+photo.farm+".staticflickr.com/"+photo.server +'/'+photo.id+'_'+photo.secret+'_m.jpeg';
@@ -266,7 +330,6 @@ $(document).ready(function () {
 function start(){
 	showUsername();
 	getContactPublicList();
-	getContactsPhotos();
 	changeBetweenFriendsAndContactsPhotos();
 }
 
