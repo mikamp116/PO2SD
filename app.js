@@ -5,7 +5,9 @@ let contactMap = new Map();
 let nameMap = new Map(); // mapa donde guardamos username y realname
 let onlyFamilyandFriends = 0; // hay que poner un interruptor para esto
 var today = new Date();
-var lastyear = today.getTime()/1000 - 31536000;
+//var lastyear = today.getTime()/1000 - 31536000;
+var this_year = 1546297200;
+var last_year = this_year - 31536000;
 
 
 function buildMethodURL(method, user_id){
@@ -80,10 +82,10 @@ function getContactsPhotos(){
 				$("#photos").append("<p class='date'>Fecha: " + img.datetaken + "</p>");
 			}
 			$(".username").click(function() {
-
+                var uss = $(this).attr("id");
                 let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
-                    '&user_id=' + $(this).attr("id") +
-                    '&min_upload_date=' + lastyear +
+                    '&user_id=' + uss +
+                    '&min_upload_date=' + this_year +
                     '&extras=date_upload&format=json&nojsoncallback=1';
                 $.getJSON(url,
 
@@ -100,6 +102,42 @@ function getContactsPhotos(){
                             var date2 = (getd)<10?('0'+getd):getd;
                             console.log(date_.getFullYear() + "-" + mon + "-" + date2);
                             fecha = date_.getFullYear() + "-" + mon + "-" + date2;
+
+                            var comment_list = "";
+
+                            $.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
+                                '&api_key=' + api_key +
+                                '&photo_id=' + img.id +
+                                '&format=json&nojsoncallback=1', function (answer) {
+                                    for (var comm of answer.comments.comment) {
+                                        comment_list += "<p>" + comm._content + "</p>";
+                                    }
+
+                                /*data.push(
+                                    {
+                                        time: fecha,
+                                        body: [{
+                                            tag: 'img',
+                                            attr: {
+                                                src: photoUrl(img),
+                                                width: '300px',
+                                                cssclass: 'img-responsive'
+                                            }
+                                        },
+                                            {
+                                                tag: 'h2',
+                                                content: img.title
+                                            },
+                                            {
+                                                tag: 'p',
+                                                content: comment_list
+                                            }]
+                                    }
+                                );*/
+
+                                }
+
+                            );
 
                             data.push(
                                 {
@@ -118,7 +156,7 @@ function getContactsPhotos(){
                                         },
                                         {
                                             tag: 'p',
-                                            content: 'aqui van los comentarios'
+                                            content: comment_list
                                         }]
                                 }
                             );
@@ -143,6 +181,113 @@ function getContactsPhotos(){
                         });
                     }
                 );
+                $('#change').append("<button id='boton'>2018</button>");
+
+                $('#boton').click(function() {
+
+                    let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
+                        '&user_id=' + uss +
+                        '&min_upload_date=' + last_year +
+                        '&max_upload_date=' + this_year +
+                        '&extras=date_upload&format=json&nojsoncallback=1';
+                    $.getJSON(url,
+
+                        function(response) {
+                            var data = [];
+                            for (var img of response.photos.photo) {
+
+                                var date_ = new Date(img.dateupload * 1000);
+                                console.log(date_.getTime());
+                                console.debug(date_);
+                                var getd = date_.getDate();
+                                var getm = date_.getMonth() + 1;
+                                var mon =  (getm)<10?('0'+getm):getm;
+                                var date2 = (getd)<10?('0'+getd):getd;
+                                console.log(date_.getFullYear() + "-" + mon + "-" + date2);
+                                fecha = date_.getFullYear() + "-" + mon + "-" + date2;
+
+                                var comment_list = "";
+
+                                $.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
+                                    '&api_key=' + api_key +
+                                    '&photo_id=' + img.id +
+                                    '&format=json&nojsoncallback=1', function (answer) {
+                                        for (var comm of answer.comments.comment) {
+                                            comment_list += "<p>" + comm._content + "</p>";
+                                        }
+
+                                        /*data.push(
+                                            {
+                                                time: fecha,
+                                                body: [{
+                                                    tag: 'img',
+                                                    attr: {
+                                                        src: photoUrl(img),
+                                                        width: '300px',
+                                                        cssclass: 'img-responsive'
+                                                    }
+                                                },
+                                                    {
+                                                        tag: 'h2',
+                                                        content: img.title
+                                                    },
+                                                    {
+                                                        tag: 'p',
+                                                        content: comment_list
+                                                    }]
+                                            }
+                                        );*/
+
+                                    }
+
+                                );
+
+                                data.push(
+                                    {
+                                        time: fecha,
+                                        body: [{
+                                            tag: 'img',
+                                            attr: {
+                                                src: photoUrl(img),
+                                                width: '300px',
+                                                cssclass: 'img-responsive'
+                                            }
+                                        },
+                                            {
+                                                tag: 'h2',
+                                                content: img.title
+                                            },
+                                            {
+                                                tag: 'p',
+                                                content: comment_list
+                                            }]
+                                    }
+                                );
+                            }
+                            $('#myTimeline').albeTimeline(data, {
+                                //Effect of presentation
+                                //'fadeInUp', 'bounceIn', etc
+                                effect: 'zoomInUp',
+                                //Sets the visibility of the annual grouper
+                                showGroup: true,
+                                //Sets the anchor menu visibility for annual groupings (depends on 'showGroup')
+                                showMenu: true,
+                                //Specifies the display language of texts (i18n)
+                                language: 'es-ES',
+                                //Sets the date display format
+                                //'dd/MM/yyyy', 'dd de MMMM de yyyy HH:mm:ss', etc
+                                //formatDate : 'dd MMMM',
+                                //Defines ordering of items
+                                //true: Descendente
+                                //false: Ascendente
+                                sortDesc: true
+                            });
+                        }
+                    );
+                    $('#boton').remove();
+                    $('#change').append("<button id='boton'>2019</button>");
+                });
+
 			});
 		}
 
@@ -159,20 +304,6 @@ function start(){
 	getContactsPhotos();
 }
 
-function clickUsername(nid) {
-	let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
-		'&user_id=' + nid +
-		'&min_upload_date=' + lastyear +
-		'&format=json&nojsoncallback=1';
-	$.getJSON(url,
-
-		function(response) {
-			for (var img of response.photos.photo){
-				$("#album").append($("<img/>").attr("src", photoUrl(img)));
-			}
-		}
-	);
-}
 $(document).ready(function () {
 
     //Overrides the CutureInfo default plugin
