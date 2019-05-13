@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8' />
+		<title>Flickr photos</title>
+		<!-- Bootstrap -->
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+		<!-- jQuery library -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+		<!-- Popper JS -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+		<!-- Latest compiled JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+		<!-- albe timeline-->
+		<script src="jquery-albe-timeline.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="style-albe-timeline.css">
+
+		<!-- Nuestra hoja de estilo -->
+		<link rel="stylesheet" type="text/css" href="zstyle.css">
+
+		<!-- app y credenciales -->
+		<script src="credencialesFlickr.js"></script>
+		<script src="app.js"></script>
+	</head>
+	<body>
+		<div class="jumbotron text-center" style="margin-bottom:0">
+  			<h1>Fotos de tus contactos de Flickr</h1>
+  			<p>Bienvenido, <span id="showUsername"></span></p> 
+		</div>
+		<nav class="navbar sticky-top navbar-expand-sm bg-dark navbar-dark" id="navbar">
+			<ul class="navbar-nav" id="ognavbar">
+			    <li class="nav-item">
+			      <a class="navbar-link" href="#" id="todos">Mostrar todos</a>
+			    </li>
+			    <li class="nav-item">
+			      <a class="navbar-link" href="#" id="amigos">Mostrar amigos</a>
+			    </li>
+			</ul>
+		</nav>
+		<div class="container" id="mcont">
+		</div>
+		<div class="container" id="myTimeline">
+			<div class="row" id="timelineTyear"></div>
+			<div class="row" id="timelineLyear"></div>
+		</div>
+	</body>
+
+</html>
