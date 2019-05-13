@@ -7,7 +7,8 @@ Trabajo realizado:
 	- Jorge: recogida de requisitos, testeo de la app, funciones en js -> mostrar el año actual o el año anterior en el timeline,
 	         mostrar fechas al lado de las fotos, modificaciones en la implementacion del albe timeline
 
-	- Mikayel : 
+	- Mikayel : estudio de la api, implementación principal de Albe Timeline, autoscroll horizontal de la timeline,
+	            mostrar comentarios en la timeline
 
 	- Víctor: código html base, funciones en js -> showUsername, primera versión de getContactPublicList, 
 			  changeBetweenFriendsAndContactsPhotos, sanitizeUname, miniphotoUrl, largephotoUrl y adaptar

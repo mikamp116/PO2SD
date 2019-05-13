@@ -145,24 +145,26 @@ function getTimelineOfYear(nyear, nuid){
 					$.getJSON('https://api.flickr.com/services/rest/?method=flickr.photos.comments.getList' +
 						'&api_key=' + api_key +
 						'&photo_id=' + img.id +
-						'&format=json&nojsoncallback=1', function (answer) {
+						'&format=json&nojsoncallback=1', comment_list, function (answer) {
+						let cont = 0;
 						for (var comm of answer.comments.comment) {
-							comment_list += "<p>" + comm._content + "</p>";
+							if (cont < 5) { // Mostramos únicamente 5 comentarios, ya que fotos de perfiles famosos tienen demasiados
+								comment_list += "<p>" + comm._content + "</p>";
+								cont++;
+							}
 						}
-					});
-
-					// Creamos el objeto para mostrarlo con la template de la timeline
-					data.push(
-						{
-							time: fecha,
-							body: [{
-										tag: 'img',
-										attr: {
-											src: miniphotoUrl(img),
-											width: '300px',
-											cssclass: 'img-responsive'
-										}
-									},
+						// Creamos el objeto para mostrarlo con la template de la timeline
+						data.push(
+							{
+								time: fecha,
+								body: [{
+									tag: 'img',
+									attr: {
+										src: miniphotoUrl(img),
+										width: '300px',
+										cssclass: 'img-responsive'
+									}
+								},
 									{
 										tag: 'h2',
 										content: img.title
@@ -170,19 +172,24 @@ function getTimelineOfYear(nyear, nuid){
 									{
 										tag: 'p',
 										content: comment_list
-								  }]
-						}
-					);
+									}]
+							}
+						);
+						// Añadimos la timeline al elemento html correspondiente
+						$(tl).albeTimeline(data, {
+							effect: 'zoomInUp',
+							showGroup: true,
+							showMenu: false,
+							language: 'es-ES',
+							sortDesc: true
+						});
+					});
+
+
+
 				}
 
-				// Añadimos la timeline al elemento html correspondiente
-				$(tl).albeTimeline(data, {
-					effect: 'zoomInUp',
-					showGroup: true,
-					showMenu: false,
-					language: 'es-ES',
-					sortDesc: true
-				});
+
 			}
 	);
 
