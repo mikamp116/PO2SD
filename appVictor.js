@@ -118,7 +118,7 @@ function getContactsPhotos(){
 			$(".un").click( function() {
 					let url = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
 				              '&user_id=' + $(this).attr("id") +
-				              '&min_upload_date=' + last_year +
+				              '&min_upload_date=' + this_year +
 							  '&extras=date_upload&format=json&nojsoncallback=1';
 					let urlpast = 'https://api.flickr.com/services/rest/?method=flickr.people.getPhotos&api_key=' + api_key +
 					'&user_id=' + $(this).attr("id") +

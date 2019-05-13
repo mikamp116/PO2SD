@@ -1,2 +1,2 @@
 # PO2SD
-SPA web application that allows users to watch his contacts recent photos
+SPA web application that allows users to see his contacts recent photos using his Flickr credentials.
