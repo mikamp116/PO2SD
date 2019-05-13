@@ -108,7 +108,7 @@ function getContactsPhotos(){
                                         tag: 'img',
                                         attr: {
                                             src: photoUrl(img),
-                                            width: '100px',
+                                            width: '300px',
                                             cssclass: 'img-responsive'
                                         }
                                     },
@@ -135,7 +135,7 @@ function getContactsPhotos(){
                             language: 'es-ES',
                             //Sets the date display format
                             //'dd/MM/yyyy', 'dd de MMMM de yyyy HH:mm:ss', etc
-                            formatDate : 'dd MMMM',
+                            //formatDate : 'dd MMMM',
                             //Defines ordering of items
                             //true: Descendente
                             //false: Ascendente
@@ -196,13 +196,6 @@ $(document).ready(function () {
             msgEmptyContent: "Aucune information à afficher."
         }
     };
-
-    //Internationalization
-    $('#myTimeline').albeTimeline(data, {
-        language: 'es-ES',	//default: pt-BR
-        formatDate: 'DD, dd MMMM aaaaa'
-
-    });
 
 });
 
